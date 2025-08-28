@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "prisma:init": "npx prisma init",
+    "prisma:migrate": "npx prisma migrate dev --name init",
+    "prisma:generate": "npx prisma generate",
+    "prisma:seed": "node prisma/seed.js"
+    
   },
   "repository": {
     "type": "git",
@@ -12,16 +19,30 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Neomunkofficial/buzz_hive_backend/issues"
   },
   "homepage": "https://github.com/Neomunkofficial/buzz_hive_backend#readme",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "aws-sdk": "^2.1692.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "pg": "^8.16.3"
+    "firebase-admin": "^13.4.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
+    "nodemailer": "^7.0.5",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "jest": "^30.1.1",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.15.0",
+    "supertest": "^7.1.4"
   }
 }
