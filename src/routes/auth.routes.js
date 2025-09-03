@@ -1,16 +1,21 @@
-// src/routes/auth.routes.js
+// backend/routes/auth.routes.js
 import express from "express";
-import { requireFirebaseUser } from "../middlewares/auth.middleware.js";
-import { verifyFirebaseToken } from "../controllers/auth.controller.js";
+import { loginUser, signupUser } from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
 /**
- * POST /api/auth/verify-token
- * Headers: Authorization: Bearer <Firebase ID token>
- * Body: (optional)
- * Flow: Verifies token, upserts user in Postgres, returns user.
+ * POST /api/auth/login
+ * Body: { phone, password }
+ * Response: { token, user }
  */
-router.post("/verify-token", requireFirebaseUser, verifyFirebaseToken);
+router.post("/login", loginUser);
+
+/**
+ * POST /api/auth/signup
+ * Body: { phone, otp }
+ * Response: { token, user }
+ */
+router.post("/signup", signupUser);
 
 export default router;

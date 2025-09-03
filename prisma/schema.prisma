@@ -7,24 +7,190 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  user_id       BigInt   @id @default(autoincrement())
-  email         String?  @unique @db.VarChar(255)
-  phone_number  String?  @unique @db.VarChar(20)
-  password_hash String   @db.Text
-  auth_provider String   @db.VarChar(50)
-  is_verified   Boolean  @default(false)
-  is_active     Boolean  @default(true)
-  role_id       Int
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
 
-  // relation with roles table
-  role UserRole @relation(fields: [role_id], references: [role_id], onDelete: Restrict)
+enum SocialType {
+  INSTAGRAM
+  SNAPCHAT
+  LINKEDIN
+  GITHUB
+  SPOTIFY
+}
+
+enum PostType {
+  POST
+  EVENT
+}
+
+model User {
+  user_id       BigInt    @id @default(autoincrement())
+  phone_number  String    @unique @db.VarChar(20)
+  password_hash String?   @db.Text
+  auth_provider String?   @default("phone") @db.VarChar(20)
+  is_verified   Boolean   @default(false)
+  is_active     Boolean   @default(true)
+
+  // basic profile
+  name          String?
+  dob           DateTime?
+  gender        Gender?
+
+  // relations
+  role_id       Int
+  role          UserRole  @relation(fields: [role_id], references: [role_id], onDelete: Restrict)
+
+  college_id    Int?
+  college       College?    @relation(fields: [college_id], references: [college_id])
+  
+  department_id Int?
+  department    Department? @relation(fields: [department_id], references: [department_id])
+  
+  batch_year    Int?
+
+  // media
+  id_card_front String?
+  id_card_back  String?
+  dp            String?
+  photos        UserPhoto[]
+
+  // interests
+  interests     UserInterest[]
+
+  // social links
+  socials       SocialLink[]
+
+  // system
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // feed relations
+  posts    Post[]
+  comments Comment[]
+  likes    Like[]
 }
 
 model UserRole {
   role_id Int    @id @default(autoincrement())
   name    String @unique
   users   User[]
+}
+
+model College {
+  college_id  Int      @id @default(autoincrement())
+  name        String   @unique
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // relations
+  users       User[]
+  departments Department[]
+  posts       Post[]
+}
+
+model Department {
+  department_id Int      @id @default(autoincrement())
+  name          String
+  college_id    Int
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // relations
+  college College @relation(fields: [college_id], references: [college_id], onDelete: Cascade)
+  users   User[]
+
+  @@unique([name, college_id]) // Prevent duplicate department names within the same college
+}
+
+model UserPhoto {
+  photo_id Int    @id @default(autoincrement())
+  user_id  BigInt
+  url      String
+
+  user     User   @relation(fields: [user_id], references: [user_id])
+}
+
+model Interest {
+  interest_id Int    @id @default(autoincrement())
+  name        String @unique
+  users       UserInterest[]
+}
+
+model UserInterest {
+  user_id     BigInt
+  interest_id Int
+
+  user     User     @relation(fields: [user_id], references: [user_id])
+  interest Interest @relation(fields: [interest_id], references: [interest_id])
+
+  @@id([user_id, interest_id])
+}
+
+model SocialLink {
+  social_id Int        @id @default(autoincrement())
+  user_id   BigInt
+  type      SocialType
+  url       String?
+
+  user      User   @relation(fields: [user_id], references: [user_id])
+}
+
+model Post {
+  post_id    Int       @id @default(autoincrement())
+  content    String
+  image_url  String?
+  type       PostType
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // relations
+  user_id    BigInt
+  user       User      @relation(fields: [user_id], references: [user_id])
+
+  college_id Int
+  college    College   @relation(fields: [college_id], references: [college_id])
+
+  comments   Comment[]
+  likes      Like[]
+  event      Event?
+}
+
+model Event {
+  event_id    Int      @id @default(autoincrement())
+  post_id     Int      @unique
+  post        Post     @relation(fields: [post_id], references: [post_id])
+
+  title       String
+  description String
+  start_date  DateTime
+  end_date    DateTime?
+  location    String
+}
+
+model Comment {
+  comment_id Int      @id @default(autoincrement())
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  user_id    BigInt
+  user       User     @relation(fields: [user_id], references: [user_id])
+
+  post_id    Int
+  post       Post     @relation(fields: [post_id], references: [post_id])
+}
+
+model Like {
+  like_id    Int      @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  user_id    BigInt
+  user       User     @relation(fields: [user_id], references: [user_id])
+
+  post_id    Int
+  post       Post     @relation(fields: [post_id], references: [post_id])
+
+  @@unique([user_id, post_id]) // prevent duplicate likes
 }
