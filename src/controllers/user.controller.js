@@ -14,7 +14,9 @@ export const updateOnboardingData = async (req, res) => {
       college_id, 
       department_id, // Changed from 'department' to match your schema
       batch_year, 
-      interests 
+      interests,
+      id_card_front,
+      id_card_back
     } = req.body;
 
     console.log("🔄 Updating onboarding data for user:", userId);
@@ -36,6 +38,8 @@ export const updateOnboardingData = async (req, res) => {
       college_id: college_id ? parseInt(college_id) : null,
       department_id: department_id ? parseInt(department_id) : null, // Fixed field name
       batch_year: batch_year ? parseInt(batch_year) : null,
+      id_card_front,
+      id_card_back,
     };
 
     console.log("🔄 Processed update data:", updateData);
