@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 export const upload = multer({ storage });
 
 /**
- * Upload a new photo
+ * Upload a new gallery photo
  */
 export const uploadPhoto = async (req, res) => {
   try {
@@ -31,9 +31,9 @@ export const uploadPhoto = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const photo = await prisma.user_photos.create({
+    const photo = await prisma.userPhoto.create({
       data: {
-        user_id: parseInt(userId),
+        user_id: BigInt(userId),
         url: `/uploads/user_photos/${req.file.filename}`,
       },
     });
@@ -45,14 +45,14 @@ export const uploadPhoto = async (req, res) => {
 };
 
 /**
- * Get all photos for a user
+ * Get all gallery photos for a user
  */
 export const getUserPhotos = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const photos = await prisma.user_photos.findMany({
-      where: { user_id: parseInt(userId) },
+    const photos = await prisma.userPhoto.findMany({
+      where: { user_id: BigInt(userId) },
     });
 
     res.json(photos);
@@ -68,8 +68,8 @@ export const deletePhoto = async (req, res) => {
   try {
     const { photoId } = req.params;
 
-    const photo = await prisma.user_photos.delete({
-      where: { id: parseInt(photoId) },
+    const photo = await prisma.userPhoto.delete({
+      where: { photo_id: parseInt(photoId) },
     });
 
     // remove file from local storage
@@ -78,6 +78,30 @@ export const deletePhoto = async (req, res) => {
     }
 
     res.json({ message: "Photo deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Upload DP (single profile picture)
+ */
+export const uploadDp = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const dpUrl = `/uploads/user_photos/${req.file.filename}`;
+
+    const user = await prisma.user.update({
+      where: { user_id: BigInt(userId) },
+      data: { dp: dpUrl },
+    });
+
+    res.json({ dp: dpUrl, user });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

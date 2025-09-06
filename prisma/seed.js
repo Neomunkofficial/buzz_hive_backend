@@ -1,10 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs"; // make sure bcryptjs is installed
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Seed roles
+  // ==============================
+  // 1. Seed Roles
+  // ==============================
   const userRole = await prisma.userRole.upsert({
     where: { name: "user" },
     update: {},
@@ -17,9 +19,73 @@ async function main() {
     create: { name: "admin" },
   });
 
-  // Create dummy users
-  const password = "Test1234"; // plain password for testing
-  const hashedPassword = await bcrypt.hash(password, 10); // bcrypt hash
+  // ==============================
+  // 2. Seed Colleges + Departments
+  // ==============================
+  const colleges = [
+    {
+      name: "Bharati Vidyapeeth College of Engineering",
+      departments: [
+        "Computer Science",
+        "Electronics and Communication Engineering",
+        "Information and Technology",
+        "Electrical and Electronics Engineering",
+      ],
+    },
+    {
+      name: "Maharaja Surajmal Institute Of Technology",
+      departments: [
+        "Computer Science",
+        "Electronics and Communication Engineering",
+        "Information and Technology",
+        "Electrical and Electronics Engineering",
+      ],
+    },
+    {
+      name: "Maharaja Agrasen Institute Of Technology",
+      departments: [
+        "Computer Science",
+        "Electronics and Communication Engineering",
+        "Electronics Engineering",
+        "Mechanical Engineering",
+        "Information and Technology",
+        "Electrical and Electronics Engineering",
+        "Instrumentation and Control Engineering",
+        "Artificial Intelligence and Machine Learning Engineering",
+      ],
+    },
+  ];
+
+  for (const college of colleges) {
+    const createdCollege = await prisma.college.upsert({
+      where: { name: college.name },
+      update: {},
+      create: { name: college.name },
+    });
+
+    for (const dept of college.departments) {
+      await prisma.department.upsert({
+        where: {
+          // prevent duplicates for same college + dept
+          name_college_id: {
+            name: dept,
+            college_id: createdCollege.college_id,
+          },
+        },
+        update: {},
+        create: {
+          name: dept,
+          college_id: createdCollege.college_id,
+        },
+      });
+    }
+  }
+
+  // ==============================
+  // 3. Seed Dummy User
+  // ==============================
+  const password = "Test1234"; // plain password
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   await prisma.user.upsert({
     where: { phone_number: "9998887777" },
@@ -29,14 +95,14 @@ async function main() {
       password_hash: hashedPassword,
       is_verified: true,
       is_active: true,
-      role_id: userRole.role_id, // use the role_id from upsert above
+      role_id: userRole.role_id,
       name: "Test User",
       dob: new Date("2000-01-01"),
       gender: "MALE",
     },
   });
 
-  console.log("✅ Roles and test user seeded");
+  console.log("✅ Roles, Colleges, Departments, and Test User seeded");
 }
 
 main()

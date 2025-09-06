@@ -5,19 +5,26 @@ import {
   uploadPhoto,
   getUserPhotos,
   deletePhoto,
+  uploadDp,
 } from "../controllers/photo.controller.js";
 
 const router = express.Router();
 
 /**
+ * POST /api/photos/dp/:userId
+ * Upload DP
+ */
+router.post("/dp/:userId", requireFirebaseUser, upload.single("photo"), uploadDp);
+
+/**
  * POST /api/photos/:userId
- * Upload a new photo (DP or gallery)
+ * Upload a gallery photo
  */
 router.post("/:userId", requireFirebaseUser, upload.single("photo"), uploadPhoto);
 
 /**
  * GET /api/photos/:userId
- * Get all photos for a user
+ * Get all gallery photos
  */
 router.get("/:userId", requireFirebaseUser, getUserPhotos);
 
